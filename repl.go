@@ -10,7 +10,6 @@ func startRepl() {
 	input := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
-
 		input.Scan()
 		cmd := cleanInput(input.Text())
 		if len(cmd) == 0 {

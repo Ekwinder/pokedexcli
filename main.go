@@ -7,6 +7,7 @@ type cliCommand struct {
 }
 
 func main() {
+
 	startRepl()
 
 }
