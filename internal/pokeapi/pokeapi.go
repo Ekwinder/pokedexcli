@@ -42,6 +42,7 @@ func getResponse(apiName string, url string) []byte {
 	res, err := http.Get(url)
 	if err != nil {
 		fmt.Printf("Fetch %s failed with error %s, please try later", apiName, err)
+		return nil
 	}
 
 	body, err := io.ReadAll(res.Body)
@@ -49,10 +50,12 @@ func getResponse(apiName string, url string) []byte {
 
 	if res.StatusCode > 299 {
 		fmt.Printf("Response from %s failed with status code %d\n", apiName, res.StatusCode)
+		return nil
 	}
 
 	if err != nil {
 		fmt.Printf("Response from %s failed with error %s\n", apiName, err)
+		return nil
 	}
 
 	return body
@@ -126,13 +129,15 @@ func Explore(area string) {
 }
 
 type Pokemon struct {
-	BaseExperience int `json:"base_experience"`
+	BaseExperience int    `json:"base_experience"`
+	Name           string `json:"name"`
 	Stats          []struct {
 		BaseStat int `json:"base_stat"`
 		Stat     struct {
 			Name string `json:"name"`
 		} `json:"stat"`
 	} `json:"stats"`
+	Height int `json:"height"`
 	Weight int `json:"weight"`
 	Types  []struct {
 		Type struct {
@@ -152,19 +157,44 @@ func Catch(name string) {
 	err := json.Unmarshal(body, &poke)
 	if err != nil {
 		fmt.Printf("Response parsing failed with error %s\n", err)
+		return
 	}
 	prob := rand.Intn(poke.BaseExperience)
 	pp := float32(poke.BaseExperience)
-
+	fmt.Printf("Throwing a Pokeball at %s...", name)
 	if prob < poke.BaseExperience-int(0.5*pp) {
 		fmt.Printf("%s escaped!\n", name)
 	} else {
-		fmt.Printf("%s was caught!\n", name)
+		fmt.Printf("%s was caught!\nYou may now inspect it with the inspect command.\n", name)
 		Pokedex[name] = poke
 	}
-	fmt.Println(Pokedex)
 }
 
-func Inspect(name string){
-	fmt.Println("inspecting")
+func Inspect(name string) {
+	poke, ok := Pokedex[name]
+	if !ok {
+		fmt.Println("you have not caught that pokemon")
+		return
+	}
+	fmt.Printf("Name: %s\n", poke.Name)
+	fmt.Printf("Height: %d\n", poke.Height)
+	fmt.Printf("Weight: %d\n", poke.Weight)
+	fmt.Println("Stats:")
+	for _, stat := range poke.Stats {
+
+		fmt.Printf(" - %s %d\n", stat.Stat.Name, stat.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, tp := range poke.Types {
+		fmt.Printf(" - %s\n", tp.Type.Name)
+	}
+
+}
+
+func PokedexRecord() {
+	fmt.Println("Your Pokedex:")
+	for k, _ := range Pokedex {
+		fmt.Printf(" - %s\n", k)
+
+	}
 }

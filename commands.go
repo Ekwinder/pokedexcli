@@ -11,10 +11,10 @@ type cliCommand struct {
 	name        string
 	description string
 	callback    func(names ...string) error
-	param bool
+	param       bool
 }
 
-var mapOrder = [7]string{"help", "exit", "map", "mapb", "explore", "catch", "inspect"}
+var mapOrder = [8]string{"help", "exit", "map", "mapb", "explore", "catch", "inspect", "pokedex"}
 
 func getCommands() map[string]cliCommand {
 	return map[string]cliCommand{
@@ -42,19 +42,24 @@ func getCommands() map[string]cliCommand {
 			name:        "explore",
 			description: `See a list of all the Pokémon in a given area.`,
 			callback:    explore,
-			param: true,
+			param:       true,
 		},
 		mapOrder[5]: {
 			name:        "catch",
-			description: `Try to catch a Pokémon`,
+			description: `Throw Pokeball at a Pokémon`,
 			callback:    catch,
-			param: true,
+			param:       true,
 		},
 		mapOrder[6]: {
 			name:        "inspect",
-			description: `Ispect a caught Pokémon`,
+			description: `Inspect a caught Pokémon`,
 			callback:    inspect,
-			param: true,
+			param:       true,
+		},
+		mapOrder[7]: {
+			name:        "pokedex",
+			description: `See your list of caught Pokémon`,
+			callback:    pokedex,
 		},
 	}
 }
@@ -88,7 +93,7 @@ func explore(names ...string) error {
 		pokeapi.Explore(names[0])
 		return nil
 	} else {
-		return fmt.Errorf("Please provide a valid name")
+		return fmt.Errorf("please provide a valid name")
 	}
 }
 
@@ -97,7 +102,7 @@ func catch(names ...string) error {
 		pokeapi.Catch(names[0])
 		return nil
 	} else {
-		return fmt.Errorf("Please provide a valid name")
+		return fmt.Errorf("please provide a valid name")
 	}
 }
 
@@ -106,6 +111,11 @@ func inspect(names ...string) error {
 		pokeapi.Inspect(names[0])
 		return nil
 	} else {
-		return fmt.Errorf("Please provide a valid name")
+		return fmt.Errorf("please provide a valid name")
 	}
+}
+
+func pokedex(names ...string) error {
+	pokeapi.PokedexRecord()
+	return nil
 }
