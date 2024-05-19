@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 
 	"github.com/Ekwinder/pokedexcli/internal/pokecache"
@@ -95,6 +96,7 @@ func GetMap(isPrev bool) {
 }
 
 func Explore(area string) {
+	// See Pokemon in an area
 	areaUrl := baseUrl + "location-area/" + area
 	exploreData := PokeExplore{}
 
@@ -121,4 +123,48 @@ func Explore(area string) {
 		fmt.Printf(" - %s\n", v.Pokemon.Name)
 	}
 
+}
+
+type Pokemon struct {
+	BaseExperience int `json:"base_experience"`
+	Stats          []struct {
+		BaseStat int `json:"base_stat"`
+		Stat     struct {
+			Name string `json:"name"`
+		} `json:"stat"`
+	} `json:"stats"`
+	Weight int `json:"weight"`
+	Types  []struct {
+		Type struct {
+			Name string `json:"name"`
+		} `json:"type"`
+	} `json:"types"`
+}
+
+var Pokedex = map[string]Pokemon{}
+
+func Catch(name string) {
+	// Catch a pokemon with chance
+	catchUrl := baseUrl + "pokemon/" + name
+	poke := Pokemon{}
+	body := getResponse("Catch", catchUrl)
+
+	err := json.Unmarshal(body, &poke)
+	if err != nil {
+		fmt.Printf("Response parsing failed with error %s\n", err)
+	}
+	prob := rand.Intn(poke.BaseExperience)
+	pp := float32(poke.BaseExperience)
+
+	if prob < poke.BaseExperience-int(0.5*pp) {
+		fmt.Printf("%s escaped!\n", name)
+	} else {
+		fmt.Printf("%s was caught!\n", name)
+		Pokedex[name] = poke
+	}
+	fmt.Println(Pokedex)
+}
+
+func Inspect(name string){
+	fmt.Println("inspecting")
 }

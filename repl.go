@@ -18,7 +18,7 @@ func startRepl() {
 		// we might want to run the command now?
 		v, ok := getCommands()[cmd[0]]
 		if ok {
-			if v.name == "explore" {
+			if v.param {
 				if len(cmd) < 2 {
 					fmt.Println("Error: Invalid Command. Plese provide area name.")
 				} else {
