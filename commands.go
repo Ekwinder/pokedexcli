@@ -7,7 +7,13 @@ import (
 	"github.com/Ekwinder/pokedexcli/internal/pokeapi"
 )
 
-var mapOrder = []string{"help", "exit", "map", "mapb"}
+type cliCommand struct {
+	name        string
+	description string
+	callback    func(names ...string) error
+}
+
+var mapOrder = [5]string{"help", "exit", "map", "mapb", "explore"}
 
 func getCommands() map[string]cliCommand {
 	return map[string]cliCommand{
@@ -31,10 +37,15 @@ func getCommands() map[string]cliCommand {
 			description: `Similar to the map command, however, instead of displaying the next 20 locations, it displays the previous 20 locations. Returns Error if already on the first page`,
 			callback:    commandMapB,
 		},
+		mapOrder[4]: {
+			name:        "explore",
+			description: `See a list of all the Pokémon in a given area.`,
+			callback:    explore,
+		},
 	}
 }
 
-func commandHelp() error {
+func commandHelp(names ...string) error {
 	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n")
 
 	for _, k := range mapOrder {
@@ -43,17 +54,26 @@ func commandHelp() error {
 	return nil
 }
 
-func commandExit() error {
+func commandExit(names ...string) error {
 	os.Exit(0)
 	return nil
 }
 
-func commandMap() error {
+func commandMap(names ...string) error {
 	pokeapi.GetMap(false)
 	return nil
 }
 
-func commandMapB() error {
+func commandMapB(names ...string) error {
 	pokeapi.GetMap(true)
 	return nil
+}
+
+func explore(names ...string) error {
+	if len(names) > 0 {
+		pokeapi.Explore(names[0])
+		return nil
+	} else {
+		return fmt.Errorf("Please provide a valid name")
+	}
 }

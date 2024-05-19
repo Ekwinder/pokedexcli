@@ -19,14 +19,46 @@ type MapData struct {
 	} `json:"results"`
 }
 
-var url = "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20"
+type PokeExplore struct {
+	PokemonEncounters []struct {
+		Pokemon struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"pokemon"`
+	} `json:"pokemon_encounters"`
+}
+
+var baseUrl = "https://pokeapi.co/api/v2/"
+
 var prev string
 
 var cache = pokecache.Cache{
 	CacheEntry: map[string]pokecache.Entry{},
 }
+var url = baseUrl + "location-area/?offset=0&limit=20"
+
+func getResponse(apiName string, url string) []byte {
+	res, err := http.Get(url)
+	if err != nil {
+		fmt.Printf("Fetch %s failed with error %s, please try later", apiName, err)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	res.Body.Close()
+
+	if res.StatusCode > 299 {
+		fmt.Printf("Response from %s failed with status code %d\n", apiName, res.StatusCode)
+	}
+
+	if err != nil {
+		fmt.Printf("Response from %s failed with error %s\n", apiName, err)
+	}
+
+	return body
+}
 
 func GetMap(isPrev bool) {
+
 	if isPrev && len(prev) == 0 {
 		fmt.Println("Error: Already on first page")
 		return
@@ -45,28 +77,11 @@ func GetMap(isPrev bool) {
 
 	} else {
 
-		res, err := http.Get(url)
-		if err != nil {
-			fmt.Printf("Fetch Map API failed with error %s, please try later", err)
-		}
-
-		body, err := io.ReadAll(res.Body)
-		res.Body.Close()
-
-		if res.StatusCode > 299 {
-			fmt.Printf("Response from Map API failed with status code %d\n", res.StatusCode)
-		}
-
-		if err != nil {
-			fmt.Printf("Response from Map API failed with error %s\n", err)
-		}
-
-		err = json.Unmarshal(body, &maps)
+		body := getResponse("Map API", url)
+		err := json.Unmarshal(body, &maps)
 		if err != nil {
 			fmt.Printf("Response parsing failed with error %s\n", err)
 		}
-
-		// update the URL to call the next page
 		cache.Add(url, body)
 
 	}
@@ -77,4 +92,33 @@ func GetMap(isPrev bool) {
 	for _, v := range maps.Results {
 		fmt.Println(v.Name)
 	}
+}
+
+func Explore(area string) {
+	areaUrl := baseUrl + "location-area/" + area
+	exploreData := PokeExplore{}
+
+	//check if the key is in cache
+	cachedResponse, ok := cache.Get(areaUrl)
+
+	// if it is then
+	if ok {
+		err := json.Unmarshal(cachedResponse, &exploreData)
+		if err != nil {
+			fmt.Printf("Response parsing failed with error %s\n", err)
+		}
+
+	} else {
+		body := getResponse("Explore API", areaUrl)
+		err := json.Unmarshal(body, &exploreData)
+		if err != nil {
+			fmt.Printf("Response parsing failed with error %s\n", err)
+		}
+		cache.Add(areaUrl, body)
+	}
+	fmt.Println("Found Pokemon:")
+	for _, v := range exploreData.PokemonEncounters {
+		fmt.Printf(" - %s\n", v.Pokemon.Name)
+	}
+
 }
